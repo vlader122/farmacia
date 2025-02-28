@@ -203,3 +203,52 @@ CREATE FUNCTION actualizar_estado_inventarios(id) return varchar
         RETURN 'hola mundo';
     END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION actualizar_estado_inventario()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.cantidad = 0 THEN
+        NEW.estado := 'VENDIDO';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_actualizar_estado ON inventarios;
+
+CREATE TRIGGER trigger_actualizar_estado
+BEFORE UPDATE ON inventarios
+FOR EACH ROW
+WHEN (OLD.cantidad <> 0 AND NEW.cantidad = 0)
+EXECUTE FUNCTION actualizar_estado_inventario();
+
+
+UPDATE inventarios
+SET cantidad = 0
+WHERE id = 12;
+
+
+CREATE OR REPLACE FUNCTION actualizar_inventarios_vencidos()
+RETURNS void AS $$
+BEGIN
+    UPDATE inventarios
+    SET estado = 'vencido'
+    WHERE fecha_vencimiento < CURRENT_DATE AND estado <> 'vencido';
+END;
+$$ LANGUAGE plpgsql;
+
+DROP PROCEDURE actualizar_inventarios_vencidos;
+CREATE PROCEDURE actualizar_inventarios_vencidos()
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE inventarios
+    SET estado = 'vencido'
+    WHERE fecha_vencimiento < CURRENT_DATE AND estado <> 'vencido';
+    RAISE NOTICE 'Verificacion Correcta';
+END;
+$$;
+
+UPDATE inventarios
+            SET estado = 'vencido'
+            WHERE fecha_vencimiento < CURRENT_DATE AND estado <> 'vencido';

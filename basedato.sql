@@ -73,3 +73,15 @@ create table detalle_compras(
 	FOREIGN KEY (compra_id) references compras(id) on delete set null,
 	FOREIGN KEY (producto_id) references productos(id) on delete set null
 );
+
+create table inventarios(
+	id SERIAL primary key,
+	producto_id int not null,
+	fecha_vencimiento timestamp default current_timestamp,
+	detalle_compra_id int not null unique,
+	estado varchar(20),
+	cantidad int,
+	precio decimal(10,2),
+	fecha_compra timestamp default current_timestamp,
+	FOREIGN KEY (producto_id) references productos(id) on delete set null
+);
